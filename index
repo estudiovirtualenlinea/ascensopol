@@ -1,0 +1,715 @@
+    <!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#073b8f">
+  <title>Estudio PNP — Lector y Simulador</title>
+  <style>
+    :root {
+      --azul: #073b8f;
+      --azul-oscuro: #03265f;
+      --azul-claro: #0b56b8;
+      --verde: #00a850;
+      --verde-oscuro: #04532f;
+      --verde-claro: #22c55e;
+      --blanco: #ffffff;
+      --texto-claro: #e2e8f0;
+      --fondo-pagina: #eef4fb;
+      --fondo-spot: #061224;
+      --dorado: #facc15;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 28px 16px;
+      color: #102a43;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(72, 159, 255, .18), transparent 28%),
+        radial-gradient(circle at 90% 90%, rgba(0, 122, 75, .13), transparent 30%),
+        var(--fondo-pagina);
+    }
+
+    .pagina {
+      width: min(1080px, 100%);
+    }
+
+    .encabezado {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .encabezado h1 {
+      margin: 0 0 8px;
+      color: var(--azul-oscuro);
+      font-size: clamp(1.55rem, 4vw, 2.55rem);
+    }
+
+    .encabezado p {
+      margin: 0;
+      color: #52606d;
+      font-size: clamp(.98rem, 2vw, 1.12rem);
+    }
+
+    .tarjetas {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      margin-bottom: 30px;
+    }
+
+    .tarjeta {
+      position: relative;
+      min-height: 490px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 42px 30px 30px;
+      text-align: center;
+      color: var(--blanco);
+      border-radius: 28px;
+      box-shadow: 0 18px 35px rgba(16, 42, 67, .18);
+      isolation: isolate;
+    }
+
+    .tarjeta::before,
+    .tarjeta::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 50%;
+      transform: rotate(-18deg);
+    }
+
+    .tarjeta::before {
+      width: 430px;
+      height: 430px;
+      top: -205px;
+      right: -180px;
+    }
+
+    .tarjeta::after {
+      width: 330px;
+      height: 330px;
+      bottom: -205px;
+      left: -160px;
+    }
+
+    .tarjeta.lector {
+      background: linear-gradient(145deg, #0b56b8, var(--azul-oscuro));
+    }
+
+    .tarjeta.simulador {
+      background: linear-gradient(145deg, #0a8b55, var(--verde-oscuro));
+    }
+
+    .icono {
+      width: 92px;
+      height: 92px;
+      display: grid;
+      place-items: center;
+      border: 3px solid rgba(255,255,255,.9);
+      border-radius: 50%;
+      font-size: 3.4rem;
+      line-height: 1;
+      background: rgba(255,255,255,.10);
+      box-shadow: 0 8px 20px rgba(0,0,0,.14);
+    }
+
+    .contenido {
+      max-width: 440px;
+    }
+
+    .contenido h2 {
+      margin: 25px 0 13px;
+      font-size: clamp(1.65rem, 3.3vw, 2.5rem);
+      line-height: 1.08;
+    }
+
+    .contenido p {
+      margin: 0;
+      font-size: clamp(1.08rem, 2.2vw, 1.35rem);
+      line-height: 1.45;
+    }
+
+    .separador {
+      width: 78%;
+      height: 2px;
+      margin: 25px auto 20px;
+      background: rgba(255,255,255,.72);
+    }
+
+    .beneficio {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+    }
+
+    .boton {
+      width: min(100%, 360px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 62px;
+      padding: 14px 22px;
+      color: var(--azul-oscuro);
+      background: var(--blanco);
+      border: 0;
+      border-radius: 18px;
+      font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+      font-weight: 800;
+      text-decoration: none;
+      box-shadow: 0 8px 16px rgba(0,0,0,.14);
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .simulador .boton {
+      color: var(--verde-oscuro);
+    }
+
+    .boton:hover,
+    .boton:focus-visible {
+      background: #eef8ff;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 22px rgba(0,0,0,.2);
+      outline: none;
+    }
+
+    .simulador .boton:hover,
+    .simulador .boton:focus-visible {
+      background: #effff7;
+    }
+
+    .pie {
+      margin-top: 10px;
+      text-align: center;
+      color: #627d98;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .whatsapp-link {
+      display: inline-block;
+      margin-top: 4px;
+      color: var(--verde);
+      font-weight: bold;
+      text-decoration: none;
+      transition: color .2s ease;
+    }
+
+    .whatsapp-link:hover {
+      color: var(--verde-oscuro);
+      text-decoration: underline;
+    }
+
+    /* === SPOT PUBLICITARIO EMBELLECIDO === */
+
+    .spot {
+      margin-top: 35px;
+      background: linear-gradient(160deg, #050f20 0%, #0a2040 50%, #071830 100%);
+      border-radius: 26px;
+      padding: 32px 26px;
+      color: var(--blanco);
+      box-shadow:
+        0 0 0 2px var(--verde-claro),
+        0 0 0 6px var(--azul-claro),
+        0 15px 45px rgba(3, 38, 95, .45);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .spot::before {
+      content: "";
+      position: absolute;
+      top: -60px;
+      right: -60px;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(34,197,94,.12), transparent 70%);
+      border-radius: 50%;
+    }
+
+    .spot::after {
+      content: "";
+      position: absolute;
+      bottom: -50px;
+      left: -50px;
+      width: 160px;
+      height: 160px;
+      background: radial-gradient(circle, rgba(11,86,184,.15), transparent 70%);
+      border-radius: 50%;
+    }
+
+    .spot > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .spot__cabecera {
+      text-align: center;
+      margin-bottom: 26px;
+      padding-bottom: 18px;
+      border-bottom: 2px solid transparent;
+      border-image: linear-gradient(
+        90deg,
+        transparent,
+        var(--azul-claro),
+        var(--verde-claro),
+        transparent
+      ) 1;
+    }
+
+    .spot__titulo {
+      font-size: clamp(2rem, 5.5vw, 3.2rem);
+      font-weight: 900;
+      line-height: 1.1;
+      color: transparent;
+      background: linear-gradient(
+        90deg,
+        var(--verde-claro),
+        #86efac,
+        var(--verde-claro)
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      text-shadow: 0 0 20px rgba(34, 197, 94, .35);
+      margin-bottom: 4px;
+    }
+
+    .spot__subtitulo {
+      font-size: clamp(1rem, 2.5vw, 1.3rem);
+      color: #93c5fd;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    .spot__oferta {
+      text-align: center;
+      background: linear-gradient(135deg, var(--azul-oscuro), #0b40a0);
+      border-radius: 20px;
+      padding: 20px 16px;
+      margin-bottom: 28px;
+      border: 2px solid rgba(250, 204, 21, .35);
+      box-shadow:
+        inset 0 0 25px rgba(250, 204, 21, .08),
+        0 8px 25px rgba(3, 38, 95, .35);
+    }
+
+    .spot__precio {
+      font-size: clamp(2.4rem, 6.5vw, 3.8rem);
+      font-weight: 900;
+      color: var(--dorado);
+      text-shadow: 0 0 15px rgba(250, 204, 21, .4);
+    }
+
+    .spot__precio small {
+      font-size: 1rem;
+      color: #e5e7eb;
+      margin-left: 6px;
+    }
+
+    .spot__normal {
+      font-size: .95rem;
+      color: #9ca3af;
+      text-decoration: line-through;
+      margin-top: 4px;
+    }
+
+    .spot__etiqueta {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 16px;
+      background: rgba(250, 204, 21, .15);
+      color: #fef08a;
+      border-radius: 50px;
+      font-size: .9rem;
+      font-weight: 700;
+    }
+
+    .spot__bloque {
+      background: rgba(7, 59, 143, .18);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      border-left: 4px solid var(--verde-claro);
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    }
+
+    .spot__bloque--azul {
+      border-left-color: var(--azul-claro);
+    }
+
+    .spot__bloque h4 {
+      font-size: 1.15rem;
+      color: var(--verde-claro);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spot__bloque--azul h4 {
+      color: #93c5fd;
+    }
+
+    .spot__bloque p {
+      color: #dbeafe;
+      line-height: 1.65;
+      margin-bottom: 8px;
+      padding-left: 2px;
+    }
+
+    .spot__bloque p:last-child {
+      margin-bottom: 0;
+    }
+
+    .spot__descripcion {
+      background: linear-gradient(
+        135deg,
+        rgba(0,168,80,.12),
+        rgba(7,59,143,.18)
+      );
+      border-radius: 16px;
+      padding: 20px;
+      margin: 20px 0;
+      border: 1px solid rgba(34,197,94,.25);
+    }
+
+    .spot__descripcion h4 {
+      color: #bbf7d0;
+      margin-bottom: 10px;
+      font-size: 1.1rem;
+    }
+
+    .spot__descripcion p {
+      color: #e0e7ff;
+      line-height: 1.7;
+    }
+
+    .spot__bono {
+      background: rgba(0,168,80,.15);
+      border-radius: 12px;
+      padding: 12px 18px;
+      margin: 16px 0;
+      border: 1px solid rgba(34,197,94,.35);
+      text-align: center;
+    }
+
+    .spot__bono p {
+      color: #bbf7d0;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+
+    .spot__wp {
+      margin-top: 26px;
+      text-align: center;
+    }
+
+    .spot__wp a {
+      display: inline-block;
+      background: linear-gradient(
+        90deg,
+        #22c55e,
+        #00a850,
+        #15803d
+      );
+      color: var(--blanco);
+      font-weight: 900;
+      font-size: 1.25rem;
+      text-decoration: none;
+      padding: 15px 32px;
+      border-radius: 50px;
+      box-shadow:
+        0 6px 22px rgba(0,168,80,.45),
+        inset 0 1px 0 rgba(255,255,255,.25);
+      transition: transform .25s ease, box-shadow .25s ease;
+      border: 2px solid rgba(255,255,255,.2);
+    }
+
+    .spot__wp a:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 10px 30px rgba(0,168,80,.55);
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 20px 12px;
+      }
+
+      .tarjetas {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+
+      .tarjeta {
+        min-height: 420px;
+        padding: 32px 22px 24px;
+        border-radius: 22px;
+      }
+
+      .icono {
+        width: 76px;
+        height: 76px;
+        font-size: 2.7rem;
+      }
+
+      .contenido h2 {
+        margin-top: 18px;
+      }
+
+      .separador {
+        margin: 19px auto 15px;
+      }
+
+      .spot {
+        padding: 24px 18px;
+      }
+
+      .spot__bloque,
+      .spot__descripcion {
+        padding: 14px 16px;
+      }
+    }
+  
+    /* Colores suaves de las tarjetas 3 y 4 */
+    .tarjeta.tarjetas-estudio {
+      background: linear-gradient(145deg, #dff1ff, #b9dcf5);
+      color: #17324d;
+      border: 1px solid #a8cde8;
+    }
+    .tarjeta.tarjetas-estudio .icono { border-color: #5d94bd; background: rgba(255,255,255,.48); box-shadow: 0 8px 20px rgba(23,50,77,.12); }
+    .tarjeta.tarjetas-estudio .separador { background: rgba(23,50,77,.28); }
+    .tarjeta.tarjetas-estudio .boton { color: #17324d; background: #ffffff; border: 1px solid #b4d1e7; }
+    .tarjeta.tarjetas-estudio .boton:hover, .tarjeta.tarjetas-estudio .boton:focus-visible { background: #f4fbff; }
+    .tarjeta.simuflex {
+      background: linear-gradient(145deg, #e4f7ee, #bfe7d1);
+      color: #174b35;
+      border: 1px solid #acd5bd;
+    }
+    .tarjeta.simuflex .icono { border-color: #5da27a; background: rgba(255,255,255,.48); box-shadow: 0 8px 20px rgba(23,75,53,.12); }
+    .tarjeta.simuflex .separador { background: rgba(23,75,53,.28); }
+    .tarjeta.simuflex .boton { color: #174b35; background: #ffffff; border: 1px solid #b5dcc4; }
+    .tarjeta.simuflex .boton:hover, .tarjeta.simuflex .boton:focus-visible { background: #f4fff8; }
+  </style>
+</head>
+
+<body>
+  <main class="pagina">
+    <header class="encabezado">
+      <h1>📚 Estudio PNP</h1>
+      <p>Elige una herramienta para comenzar a estudiar.</p>
+    </header>
+
+    <section class="tarjetas" aria-label="Herramientas de estudio">
+      <article class="tarjeta lector">
+        <div class="icono" aria-hidden="true">📖</div>
+
+        <div class="contenido">
+          <h2>⏳ Lector de<br>Estudio PNP</h2>
+          <p>Repasa los 22 temas<br>del banco de preguntas</p>
+
+          <div class="separador"></div>
+
+          <p class="beneficio">
+            Lectura en voz alta disponible
+          </p>
+        </div>
+
+        <a
+          class="boton"
+          href="https://fernandotaco.github.io/AscensoPol/lector.html">
+          Acceder al Lector
+        </a>
+      </article>
+
+      <article class="tarjeta simulador">
+        <div class="icono" aria-hidden="true">📝</div>
+
+        <div class="contenido">
+          <h2>▤ Simulador<br>de Examen PNP</h2>
+          <p>Practica con preguntas<br>aleatorias y cronómetro</p>
+
+          <div class="separador"></div>
+
+          <p class="beneficio">
+            Resultados inmediatos
+          </p>
+        </div>
+
+        <a
+          class="boton"
+          href="https://fernandotaco.github.io/AscensoPol/simuladorpnp.html">
+          Iniciar Simulador
+        </a>
+      </article>
+
+      <article class="tarjeta tarjetas-estudio">
+        <div class="icono" aria-hidden="true">🃏</div>
+
+        <div class="contenido">
+          <h2>🃏 Tarjetas de<br>Estudio PNP</h2>
+          <p>Repasa preguntas y respuestas<br>de forma rápida y visual</p>
+
+          <div class="separador"></div>
+
+          <p class="beneficio">
+            Estudia con tarjetas interactivas
+          </p>
+        </div>
+
+        <a
+          class="boton"
+          href="https://fernandotaco.github.io/AscensoPol/tarjetas-estudio-pnp.html">
+          Abrir Tarjetas de Estudio
+        </a>
+      </article>
+
+      <article class="tarjeta simuflex">
+        <div class="icono" aria-hidden="true">🪢</div>
+
+        <div class="contenido">
+          <h2>🔐 Simuflex<br>PNP</h2>
+          <p>Practica con el simulador flexible<br>y refuerza tus conocimientos</p>
+
+          <div class="separador"></div>
+
+          <p class="beneficio">
+            Practica ocultando las alternativas incorrectas
+          </p>
+        </div>
+
+        <a
+          class="boton"
+          href="https://fernandotaco.github.io/AscensoPol/simuflex.html">
+          Abrir Simuflex
+        </a>
+      </article>
+    </section>
+
+    <p class="pie">
+      Selecciona una opción para continuar.<br>
+
+      📞 ¿Tienes dudas o quieres adquirir acceso? Escríbenos por WhatsApp:
+
+      <a
+        class="whatsapp-link"
+        href="https://wa.me/51989721207"
+        target="_blank"
+        rel="noopener noreferrer">
+        989721207
+      </a>
+    </p>
+
+    <!-- === SPOT PUBLICITARIO EMBELLECIDO === -->
+
+    <section class="spot">
+      <div class="spot__cabecera">
+        <h2 class="spot__titulo">
+          🔥 ASCENSO PNP 2026 – 2027
+        </h2>
+
+        <p class="spot__subtitulo">
+          EXCLUSIVO PARA SUBOFICIALES PNP
+        </p>
+      </div>
+
+      <div class="spot__oferta">
+        <div class="spot__precio">
+          S/ 20 <small>Único pago</small>
+        </div>
+
+        <div class="spot__normal">
+          Precio normal: S/ 35
+        </div>
+
+        <div class="spot__etiqueta">
+          ⏳ OFERTA POR TIEMPO LIMITADO
+        </div>
+      </div>
+
+      <div class="spot__bloque">
+        <h4>📖⏳ Lector de Estudio PNP</h4>
+
+        <p>
+          ✅ <strong>Estudia el balotario a tu ritmo</strong> —
+          Lectura en voz alta disponible. Preguntas numeradas y ordenadas
+          para fácil ubicación y no olvidar ninguna.
+        </p>
+
+        <p>
+          ✅ <strong>Exámenes por temas (22 temas)</strong> —
+          Elige el tema y la cantidad de preguntas a practicar.
+          Las respuestas muestran palabras clave subrayadas para que
+          reconozcas la alternativa correcta con mayor rapidez.
+        </p>
+
+        <p>
+          ✅ <strong>Repasa las preguntas difíciles</strong> —
+          El sistema separa automáticamente las que respondiste mal, tú también puedes marcarlas con un botón 🎣 y repasarlas.
+        </p>
+      </div>
+
+      <div class="spot__bloque spot__bloque--azul">
+        <h4>📚 Simulador – Examen de Ascenso</h4>
+
+        <p>
+          📖 Selecciona el tema y la cantidad de preguntas;
+          el sistema las presenta de forma aleatoria.
+        </p>
+
+        <p>
+          ⏱️ Practica con preguntas aleatorias y cronómetro en tiempo real.
+        </p>
+
+        <p>
+          ✅ <strong>Repasa las preguntas difíciles</strong> —
+          El sistema separa automáticamente las que respondiste mal para repasarlas.
+        </p>
+      </div>
+
+      <div class="spot__descripcion">
+        <h4>📝 Descripción de la herramienta</h4>
+
+        <p>
+          Haz que tu examen de conocimientos sea más fácil 📚👮.
+          Estudia primero con el Lector para avanzar y memorizar rápido,
+          luego afina tu preparación con el Simulador.
+          Las herramientas funcionan en cualquier dispositivo:
+          celular, computadora o laptop, y están diseñadas para ser
+          sencillas e intuitivas. Todo en un solo pago.
+        </p>
+      </div>
+
+      <div class="spot__wp">
+        <a
+          href="https://wa.me/51989721207"
+          target="_blank"
+          rel="noopener noreferrer">
+          💬 Escríbenos por WhatsApp: 989721207
+        </a>
+      </div>
+    </section>
+
+    <!-- === FIN DEL SPOT === -->
+  </main>
+</body>
+</html>
+    
