@@ -717,7 +717,10 @@
         margin-right: 0 !important;
       }
     }
-</style>
+
+    .btn-sonido { width:44px!important; height:44px; padding:0!important; margin:0; border-radius:50%; font-size:22px; display:inline-flex; align-items:center; justify-content:center; background:#16803a; }
+    .btn-sonido.silenciado { background:#6c757d; opacity:.85; }
+  </style>
 </head>
 <body>
 <div class="caja-login" id="caja-login">
@@ -757,7 +760,8 @@
         <button class="btn-reiniciar-dificiles" title="Reiniciar lectura y borrar marcas" aria-label="Reiniciar lectura y borrar marcas" onclick="reiniciarDificiles()">♻️</button>
         <button class="btn-llave" id="btn-llave" title="Revelar la llave o la pista de contraste" aria-label="Revelar la llave o la pista de contraste" aria-pressed="false" onclick="revelarLlave()">🗝️</button>
         <button class="btn-dificil" id="btn-dificil" title="Marcar esta pregunta como difícil" aria-label="Marcar esta pregunta como difícil" aria-pressed="false" onclick="alternarDificil()">🎣</button>
-        <button class="btn-contraste" title="Cambiar contraste" aria-label="Cambiar contraste" onclick="cambiarContraste()">🎨</button>
+        <button class="btn-contraste" title="Cambiar contraste" aria-label="Cambiar contraste" onclick="cambiarContraste();reproducirEfecto('contraste')">🎨</button>
+        <button class="btn-sonido" id="btn-sonido" title="Silenciar efectos de sonido" aria-label="Silenciar efectos de sonido" aria-pressed="false" onclick="alternarSonido()">🔊</button>
       </div>
     </div>
   </div>
@@ -948,10 +952,18 @@ function renderizarPregunta(){
  const btn=document.getElementById('btn-dificil'); const marked=dificiles.has(p.id);btn.classList.toggle('marcada',marked);btn.setAttribute('aria-pressed',String(marked));btn.title=marked?'Quitar de preguntas difíciles':'Marcar esta pregunta como difícil';
  document.getElementById('btn-anterior').style.visibility=indiceActual?'visible':'hidden'; document.getElementById('btn-siguiente').textContent=indiceActual===preguntasSeleccionadas.length-1?'✅':'➡️';
 }
-function seleccionarAlternativa(pos){const p=preguntaActual();if(!p||p.evaluada)return;const orden=p.ordenAlternativas||[0,1,2,3,4];p.seleccionada=orden[pos];p.evaluada=true;p.mostrandoLlave=(p.seleccionada===p.correcta&&!p.clasificacion.includes('[sin llave única]'));renderizarPregunta();}
-function revelarLlave(){const p=preguntaActual();if(!p)return;p.evaluada=true;p.seleccionada=null;p.mostrandoLlave=true;renderizarPregunta();}
-function alternarDificil(){const id=preguntaActual().id;if(dificiles.has(id))dificiles.delete(id);else dificiles.add(id);guardarDificiles();renderizarPregunta();}
+let audioContext=null;
+let sonidosActivos=localStorage.getItem('efectosSonido')!=='off';
+function alternarSonido(){sonidosActivos=!sonidosActivos;localStorage.setItem('efectosSonido',sonidosActivos?'on':'off');actualizarBotonSonido();if(sonidosActivos)reproducirEfecto('activar');}
+function actualizarBotonSonido(){const b=document.getElementById('btn-sonido');if(!b)return;b.textContent=sonidosActivos?'🔊':'🔇';b.classList.toggle('silenciado',!sonidosActivos);b.setAttribute('aria-pressed',String(!sonidosActivos));b.title=sonidosActivos?'Silenciar efectos de sonido':'Activar efectos de sonido';b.setAttribute('aria-label',b.title);}
+function tono(frecuencia,duracion=0.12,onda='sine',inicio=0,volumen=0.045){if(!sonidosActivos)return;if(!audioContext)audioContext=new (window.AudioContext||window.webkitAudioContext)();if(audioContext.state==='suspended')audioContext.resume();const ahora=audioContext.currentTime+inicio,osc=audioContext.createOscillator(),gain=audioContext.createGain();osc.type=onda;osc.frequency.setValueAtTime(frecuencia,ahora);gain.gain.setValueAtTime(0.0001,ahora);gain.gain.exponentialRampToValueAtTime(volumen,ahora+0.012);gain.gain.exponentialRampToValueAtTime(0.0001,ahora+duracion);osc.connect(gain);gain.connect(audioContext.destination);osc.start(ahora);osc.stop(ahora+duracion+0.02);}
+function reproducirEfecto(tipo){if(!sonidosActivos)return;try{if(tipo==='correcta'){tono(523,.12,'sine',0,.055);tono(659,.14,'sine',.10,.055);tono(784,.18,'sine',.21,.05);}else if(tipo==='incorrecta'){tono(220,.16,'sawtooth',0,.035);tono(165,.22,'sawtooth',.13,.03);}else if(tipo==='llave'){tono(880,.10,'triangle',0,.05);tono(1175,.16,'triangle',.09,.045);}else if(tipo==='dificil'){tono(330,.08,'square',0,.035);tono(250,.10,'square',.08,.025);}else if(tipo==='contraste'){tono(392,.10,'sine',0,.04);tono(523,.12,'sine',.10,.04);}else if(tipo==='reiniciar'){tono(480,.09,'triangle',0,.04);tono(360,.12,'triangle',.09,.035);tono(240,.16,'triangle',.20,.03);}else if(tipo==='activar'){tono(660,.08,'sine',0,.035);tono(880,.12,'sine',.08,.04);}}catch(e){}}
+
+function seleccionarAlternativa(pos){const p=preguntaActual();if(!p||p.evaluada)return;const orden=p.ordenAlternativas||[0,1,2,3,4];p.seleccionada=orden[pos];p.evaluada=true;p.mostrandoLlave=(p.seleccionada===p.correcta&&!p.clasificacion.includes('[sin llave única]'));reproducirEfecto(p.seleccionada===p.correcta?'correcta':'incorrecta');renderizarPregunta();}
+function revelarLlave(){const p=preguntaActual();if(!p)return;p.evaluada=true;p.seleccionada=null;p.mostrandoLlave=true;reproducirEfecto('llave');renderizarPregunta();}
+function alternarDificil(){const id=preguntaActual().id;if(dificiles.has(id))dificiles.delete(id);else dificiles.add(id);reproducirEfecto('dificil');guardarDificiles();renderizarPregunta();}
 function reiniciarDificiles(){
+  reproducirEfecto('reiniciar');
   const enSelector=!document.getElementById('panel-config').classList.contains('oculto');
   if(enSelector){
     if(!confirm('¿Borrar la selección actual y comenzar desde el principio?')) return;
@@ -1054,6 +1066,6 @@ function leerRespuesta(boton) {
   window.speechSynthesis.speak(lectura);
 }
 
-function inicializarLector(){try{opcionesTema();opcionesAnalisis();}catch(e){console.error('No se pudo inicializar el lector',e);}} if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',inicializarLector);}else{inicializarLector();} document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('caja-login').style.display!=='none'){e.preventDefault();verificarAcceso();}});
+function inicializarLector(){try{actualizarBotonSonido();opcionesTema();opcionesAnalisis();}catch(e){console.error('No se pudo inicializar el lector',e);}} if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',inicializarLector);}else{inicializarLector();} document.addEventListener('keydown',e=>{if(e.key==='Enter'&&document.getElementById('caja-login').style.display!=='none'){e.preventDefault();verificarAcceso();}});
 </script>
 </body></html>
