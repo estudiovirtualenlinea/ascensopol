@@ -260,7 +260,43 @@
 .barra .menu .menu-desplegable{left:0;transform:none;text-align:left}
 .barra .menu .menu-desplegable button{font-size:15px;padding:9px 12px}
 @media(max-width:600px){.barra .menu .menu-desplegable button{font-size:13px;padding:8px 10px}}
-</style></head><body>
+</style>
+<script>
+// Mostrar aviso al intentar recargar, cerrar página o salir
+window.addEventListener('beforeunload', function (e) {
+  // Mensaje que se muestra en el aviso
+  const mensaje = "⚠️ Tienes el Estudio Virtual PNP en curso. ¿Seguro que deseas salir? Los datos no guardados se perderán.";
+  
+  // Establecer el mensaje
+  e.preventDefault();
+  e.returnValue = mensaje;
+  
+  // Devolver el mensaje (requerido por algunos navegadores)
+  return mensaje;
+});
+
+// Prevenir actualización al deslizar hacia abajo en celular
+let ultimaPosicion = 0;
+window.addEventListener('scroll', function() {
+  const posicionActual = window.scrollY;
+  // Si está arriba y desliza hacia abajo
+  if (ultimaPosicion <= 0 && posicionActual > 0) {
+    // No hacemos nada — el aviso aparece al intentar recargar
+  }
+  ultimaPosicion = posicionActual;
+});
+
+// Interceptar tecla F5, Ctrl+R, Cmd+R
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'F5' || (e.ctrlKey || e.metaKey) && e.key === 'r') {
+    e.preventDefault();
+    if (confirm("⚠️ ¿Deseas actualizar la página? Si lo haces, se reiniciará el examen y se perderá el progreso.")) {
+      window.location.reload();
+    }
+  }
+});
+</script>
+</head><body>
 <section id="zona-acceso"><div class="login"><div class="logo">🔐</div><h1>Acceso a Estudio Virtual PNP</h1><p>Ingresa tu código de usuario y clave de acceso</p><label for="usuario">Código de usuario</label><input id="usuario" type="text" placeholder="Ejemplo: USU001" autocomplete="username" oninput="this.value=this.value.toUpperCase().replace(/\s/g,'')"><label for="clave">Contraseña</label><input id="clave" type="password" placeholder="Ingresa tu contraseña" autocomplete="current-password"><button id="btnIngresar" type="button" onclick="ingresar()">✅ Ingresar</button><div id="error" class="error" role="alert"></div></div>
 <section class="herramientas-iniciales" aria-label="Herramientas incluidas">
   <article class="tarjeta-inicial tarjeta-inicial--lector">
